@@ -407,22 +407,25 @@ walk: // Outer loop for walking the tree
 			if path[:len(prefix)] == prefix {
 				path = path[len(prefix):]
 
-				// Try all the non-wildcard children first by matching the indices
-				idxc := path[0]
-				for i, c := range []byte(n.indices) {
-					if c == idxc {
-						n = n.children[i]
-						continue walk
+				// skip over the indices+tsr check if there's exactly 1 child and its a param
+				if !(n.wildChild && len(n.children) == 1) {
+					// Try all the non-wildcard children first by matching the indices
+					idxc := path[0]
+					for i, c := range []byte(n.indices) {
+						if c == idxc {
+							n = n.children[i]
+							continue walk
+						}
 					}
-				}
 
-				// If there is no wildcard pattern, recommend a redirection
-				if !n.wildChild {
-					// Nothing found.
-					// We can recommend to redirect to the same URL without a
-					// trailing slash if a leaf exists for that path.
-					value.tsr = (path == "/" && n.handlers != nil)
-					return
+					// If there is no wildcard pattern, recommend a redirection
+					if !n.wildChild {
+						// Nothing found.
+						// We can recommend to redirect to the same URL without a
+						// trailing slash if a leaf exists for that path.
+						value.tsr = (path == "/" && n.handlers != nil)
+						return
+					}
 				}
 
 				// Handle wildcard child, which is always at the end of the array
